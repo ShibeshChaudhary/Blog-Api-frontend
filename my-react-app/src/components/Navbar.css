@@ -1,0 +1,40 @@
+.nav-bar {
+  background: rgb(89, 90, 92);
+  padding: 1rem 2rem;
+
+  position: fixed;    
+  top: 0;
+  left: 0;
+  width: 100%;       
+  z-index: 1000;
+}
+
+ 
+.nav-bar-div {
+  max-width: 1200px;   
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3rem;
+}
+
+.nav-bar-div a {
+  color: #fdf6f6;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.7rem 1.5rem;
+  border-radius: 25px;
+  border: 1px solid transparent;
+  transition: 0.3s ease;
+}
+
+.nav-bar-div a:hover {
+  color: #a3f0e3;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+ 
+body {
+  padding-top: 80px;
+}

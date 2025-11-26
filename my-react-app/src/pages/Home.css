@@ -1,0 +1,19 @@
+
+.home-container {
+  text-align: center;
+  margin-top: 80px;
+  padding: 20px;
+  background-color:rgb(118, 127, 141);
+}
+
+.home-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #c6c8ce;
+}
+
+.home-subtitle {
+  font-size: 18px;
+  margin-top: 10px;
+  color: #555;
+}
