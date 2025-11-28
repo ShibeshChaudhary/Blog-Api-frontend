@@ -1,18 +1,29 @@
 import { useState } from "react";
-import "./Register.css";
+import axios from "axios";
+import { API_URL } from "../services/api";
+import ("./Register.css");
+
 function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = { name, email, password, role };
+    try {
+      const response = await axios.post(`${API_URL}/api/auth/register`, {
+        name,
+        email,
+        password,
+        role
+      });
 
-    console.log("Form Data:", formData);
-    alert("Form Submitted!");
+      alert(response.data.msg);
+    } catch (err) {
+      alert(err)("Error registering user");
+    }
   };
 
   return (
