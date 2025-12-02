@@ -1,64 +1,73 @@
 import { useState } from "react";
-import axios from "axios";
-import { API_URL } from "../services/api";
-import ("./Register.css");
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Register.css";
 
 function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    try {
-      const response = await axios.post(`${API_URL}/api/auth/register`, {
-        name,
-        email,
-        password,
-        role
-      });
+    const result = await register(name, email, password, role);
 
-      alert(response.data.msg);
-    } catch (err) {
-      alert(err)("Error registering user");
+    if (result.success) {
+      alert(result.message || "Registration successful!");
+      navigate("/Account");
+    } else {
+      setError(result.error);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="Signup-div">
+    <div className="signup-box">
       <h2>Signup</h2>
 
       <form onSubmit={handleSubmit}>
+        <input 
+          type="text" 
+          placeholder="Enter your name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
 
-        <div>
-          <label>Name:</label><br />
-          <input type="text" placeholder="Enter your name"value={name}onChange={(e) => setName(e.target.value)}/>
-        </div>
+        <input 
+          type="email" 
+          placeholder="Enter email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-        <div style={{ marginTop: "10px" }}>
-          <label>Email:</label><br />
-          <input type="email" placeholder="Enter email"value={email}onChange={(e) => setEmail(e.target.value)}/>
-        </div>
+        <input 
+          type="password" 
+          placeholder="Enter password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-        <div style={{ marginTop: "10px" }}>
-          <label>Password:</label><br />
-          <input type="password" placeholder="Enter password"value={password}onChange={(e) => setPassword(e.target.value)}/>
-        </div>
+        <select value={role} onChange={(e) => setRole(e.target.value)}>
+          <option value="user">User</option>
+          <option value="editor">Editor</option>
+        </select>
 
-        <div style={{ marginTop: "10px" }}>
-          <label>Role:</label><br />
-          <select value={role}onChange={(e) => setRole(e.target.value)}>
-            <option value="editor">Editor</option>
-            <option value="user">User</option>
-          </select>
-        </div>
+        {error && <p style={{color: 'red', fontSize: '14px'}}>{error}</p>}
 
-        <button type="submit" style={{ marginTop: "10px" }}>
-          Submit
+        <button type="submit" disabled={loading}>
+          {loading ? "Signing up..." : "Submit"}
         </button>
-
       </form>
     </div>
   );

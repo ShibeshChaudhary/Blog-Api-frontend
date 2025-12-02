@@ -1,66 +1,56 @@
 import { useState } from "react";
-import axios from "axios";
-import { API_URL } from "../services/api";
-import "./Register.css";  // Fixed: removed extra parentheses
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "./Register.css";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");  // Fixed: was "onst"
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);  // Fixed: was "true" (string), should be true (boolean)
+    setLoading(true);
     setError("");
 
-    try {
-      const res = await axios.post("http://localhost:3000/api/auth/login", {
-        email,
-        password
-      });
-      
-      console.log("Login successful!", res.data);
-      
-      // Save token
-      localStorage.setItem("token", res.data.token);
-      
-      // Redirect to dashboard
-      window.location.href = "/Account";
-      
-    } catch (err) {
-      setError(err.response?.data?.msg || "Login failed");
+    const result = await login(email, password);
+    
+    if (result.success) {
+      navigate("/Account");
+    } else {
+      setError(result.error);
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <h2>Login Page</h2>
+    <div className="signup-box">
+      <h2>Login</h2>
       
       <form onSubmit={handleLogin}>
         <input 
           type="email" 
           placeholder="Email" 
-          value={email}  // Added: connect to state
-          onChange={(e) => setEmail(e.target.value)}  // Added: update state
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <br />
         
         <input 
           type="password" 
           placeholder="Password" 
-          value={password}  // Added: connect to state
-          onChange={(e) => setPassword(e.target.value)}  // Added: update state
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <br />
         
-        {error && <p className="error">{error}</p>}  {/* Added: show errors */}
+        {error && <p style={{color: 'red', fontSize: '14px'}}>{error}</p>}
         
         <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}  {/* Added: loading state */}
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
