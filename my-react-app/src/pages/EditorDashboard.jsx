@@ -38,30 +38,40 @@ function EditorDashboard() {
   }, [isAuthenticated, user, navigate]);
 
   const fetchPosts = async () => {
-  try {
-    setLoading(true);
-    const token = localStorage.getItem("token");
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
 
-    const response = await axios.get("http://localhost:3000/api/post", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      if (!token) {
+        setError("No authentication token found. Please login again.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get("http://localhost:3000/api/post", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
  
-    const postsData = Array.isArray(response.data)
-      ? response.data
-      : Array.isArray(response.data.data)
-      ? response.data.data
-      : [];
+      const postsData = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data?.DATA)
+        ? response.data.DATA
+        : [];
 
-    setPosts(postsData);
+      setPosts(postsData);
 
-  } catch (err) {
-    setError("Failed to load posts");
-    console.error(err);
-    setPosts([]); 
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || "Failed to load posts";
+      setError(errorMessage);
+      console.error("Fetch posts error:", err);
+      setPosts([]); 
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const handleInputChange = (e) => {
@@ -75,40 +85,61 @@ function EditorDashboard() {
     try {
       const token = localStorage.getItem("token");
 
+      // Convert tag string to array (split by comma and trim whitespace)
+      const tagsArray = formData.tag
+        ? formData.tag.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+        : [];
+
+      // Prepare data to send to API
+      const postData = {
+        title: formData.title,
+        content: formData.content,
+        tag: tagsArray,
+        author: formData.author || undefined
+      };
+
       if (editingPost) {
         // UPDATE
+        const postId = editingPost.id || editingPost._id;
+        if (!postId) {
+          setError("Post ID is missing. Cannot update post.");
+          return;
+        }
         await axios.put(
-          `http://localhost:3000/api/post/${editingPost.id}`,
-          formData,
+          `http://localhost:3000/api/post/${postId}`,
+          postData,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } else {
         // CREATE
-        await axios.post("http://localhost:3000/api/post", formData, {
+        await axios.post("http://localhost:3000/api/post", postData, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
 
-      setFormData({ title: "", content: "" });
+      setFormData({ title: "", content: "", tag: "", author: "" });
       setEditingPost(null);
+      setError(null);
 
       fetchPosts();
     } catch (err) {
-      setError("Failed to save post");
-      console.error(err);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to save post";
+      setError(errorMessage);
+      console.error("Save post error:", err);
     }
   };
 
   const handleEdit = (post) => {
-  setEditingPost(post);
-  setFormData({
-    title: post.title,
-    content: post.content,
-    tag: post.tag?.join(", ") || ""
-  });
-};
+    setEditingPost(post);
+    setFormData({
+      title: post.title || "",
+      content: post.content || "",
+      tag: post.tag?.join(", ") || "",
+      author: post.author?.name || post.author || ""
+    });
+  };
 
 
   const handleDelete = async (id) => {
@@ -121,20 +152,14 @@ function EditorDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      setError(null);
       fetchPosts();
     } catch (err) {
-      setError("Failed to delete post");
-      console.error(err);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to delete post";
+      setError(errorMessage);
+      console.error("Delete post error:", err);
     }
   };
-
-  if (loading) {
-    return <div className="loading">Loading editor dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
 
   return (
     <div className="manager-dashboard">
@@ -156,6 +181,13 @@ function EditorDashboard() {
       </nav>
 
       <main className="dashboard-content">
+        {error && (
+          <div className="error-banner" style={{color: 'red', padding: '10px', marginBottom: '20px'}}>
+            {error}
+            <button onClick={() => setError(null)} style={{marginLeft: '10px'}}>×</button>
+          </div>
+        )}
+        {loading && <div className="loading">Loading posts...</div>}
         <div className="posts-section">
           <h2>{editingPost ? "Edit Post" : "Add New Post"}</h2>
 
@@ -164,7 +196,7 @@ function EditorDashboard() {
               type="text"
               name="title"
               placeholder="Post title"
-              value={formData.title}
+              value={formData.title || ""}
               onChange={handleInputChange}
               required
             />
@@ -173,22 +205,22 @@ function EditorDashboard() {
               name="content"
               placeholder="Post content"
               rows="5"
-              value={formData.content}
+              value={formData.content || ""}
               onChange={handleInputChange}
               required
             ></textarea>
             <input
               type="text"
-              name="tags"
+              name="tag"
               placeholder="Tags"
-              value={formData.tag}
+              value={formData.tag || ""}
               onChange={handleInputChange}
             />
             <input
               type="text"
               name="author"
               placeholder="Author"
-              value={formData.author}
+              value={formData.author || ""}
               onChange={handleInputChange}
             />
 
@@ -202,7 +234,7 @@ function EditorDashboard() {
                 className="cancel-btn"
                 onClick={() => {
                   setEditingPost(null);
-                  setFormData({ title: "", content: "" });
+                  setFormData({ title: "", content: "", tag: "", author: "" });
                 }}
               >
                 Cancel Edit
@@ -210,8 +242,11 @@ function EditorDashboard() {
             )}
           </form>
 
-          <h2>All Posts</h2>
+          <h2>All Posts ({posts.length})</h2>
 
+          {posts.length === 0 && !loading ? (
+            <div>No posts found</div>
+          ) : (
           <div className="table-container">
             <table className="data-table">
               <thead>
@@ -231,8 +266,8 @@ function EditorDashboard() {
                     <td>{post.id || post._id}</td>
                     <td>{post.title}</td>
                     <td>{post.content}</td>
-                    <td>{post.author?.name}</td>
                     <td>{post.tag?.join(", ")}</td>
+                    <td>{post.author?.name}</td>
 
                     <td>
                       <button
@@ -254,6 +289,7 @@ function EditorDashboard() {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </main>
     </div>

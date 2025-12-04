@@ -8,7 +8,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role] = useState("user");
-  const [ setError] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -57,6 +57,8 @@ function Register() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+
+        {error && <p style={{color: 'red', fontSize: '14px', marginTop: '10px'}}>{error}</p>}
 
         <button type="submit" disabled={loading}>
           {loading ? "Signing up..." : "Submit"}

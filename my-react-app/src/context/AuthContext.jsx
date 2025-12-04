@@ -16,8 +16,15 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem("user");
+      if (!saved) return null;
+      return JSON.parse(saved);
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      localStorage.removeItem("user");
+      return null;
+    }
   });
   const [loading, setLoading] = useState(true);
 
@@ -26,25 +33,44 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const verifyToken = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await axios.get(`${API_URL}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(res.data.user);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-    } catch (err) {
-      console.error("Token verification failed:", err);
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${API_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const user = res.data?.user || res.data?.data?.user;
+        if (user) {
+          setUser(user);
+          try {
+            localStorage.setItem("user", JSON.stringify(user));
+          } catch (storageError) {
+            console.error("Error saving user to localStorage:", storageError);
+          }
+        }
+      } catch (err) {
+        // Token is invalid or expired
+        console.error("Token verification failed:", err);
+        try {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        } catch (storageError) {
+          console.error("Error clearing localStorage:", storageError);
+        }
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Unexpected error in verifyToken:", error);
       setUser(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const login = async (email, password) => {
@@ -53,15 +79,33 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
       });
-      const { user, token } = res.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
-      return { success: true };
+      
+      const user = res.data?.user || res.data?.data?.user;
+      const token = res.data?.token || res.data?.data?.token;
+      
+      if (!user || !token) {
+        return {
+          success: false,
+          error: "Invalid response from server",
+        };
+      }
+
+      try {
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+        return { success: true };
+      } catch (storageError) {
+        console.error("Error saving to localStorage:", storageError);
+        return {
+          success: false,
+          error: "Failed to save login information",
+        };
+      }
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.msg || err.response?.data?.message || "Login failed",
+        error: err.response?.data?.msg || err.response?.data?.message || err.message || "Login failed",
       };
     }
   };
@@ -74,15 +118,33 @@ export const AuthProvider = ({ children }) => {
         password,
         role
       });
-      const { user, token } = res.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
-      return { success: true, message: res.data.msg };
+      
+      const user = res.data?.user || res.data?.data?.user;
+      const token = res.data?.token || res.data?.data?.token;
+      
+      if (!user || !token) {
+        return {
+          success: false,
+          error: "Invalid response from server",
+        };
+      }
+
+      try {
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+        return { success: true, message: res.data?.msg || res.data?.message || "Registration successful" };
+      } catch (storageError) {
+        console.error("Error saving to localStorage:", storageError);
+        return {
+          success: false,
+          error: "Failed to save registration information",
+        };
+      }
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.msg || err.response?.data?.message || "Registration failed",
+        error: err.response?.data?.msg || err.response?.data?.message || err.message || "Registration failed",
       };
     }
   };
@@ -100,14 +162,21 @@ export const AuthProvider = ({ children }) => {
             }
           );
         } catch (err) {
+          // Ignore 404 errors (endpoint might not exist)
           if (err.response?.status !== 404) {
             console.error("Logout API error:", err);
           }
         }
       }
+    } catch (error) {
+      console.error("Unexpected error in logout:", error);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      } catch (storageError) {
+        console.error("Error clearing localStorage:", storageError);
+      }
       setUser(null);
     }
   };

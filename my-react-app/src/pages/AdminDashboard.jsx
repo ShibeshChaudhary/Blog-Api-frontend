@@ -10,7 +10,8 @@ function AdminDashboard() {
   const [postsLoading, setPostsLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
-  const [error, setError] = useState(null);
+  const [usersError, setUsersError] = useState(null);
+  const [postsError, setPostsError] = useState(null);
 
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -33,21 +34,32 @@ function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       setUsersLoading(true);
-      setError(null);
+      setUsersError(null);
       const token = localStorage.getItem("token");
       
-      if (!token) throw new Error("No token found");
+      if (!token) {
+        setUsersError("No authentication token found. Please login again.");
+        setUsersLoading(false);
+        return;
+      }
 
       const response = await axios.get("http://localhost:3000/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Simplified response handling
-      const usersData = response.data?.data || response.data || [];
-      setUsers(Array.isArray(usersData) ? usersData : []);
+      // Handle different response formats
+      const usersData = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data?.users)
+        ? response.data.users
+        : [];
+      setUsers(usersData);
     } catch (err) {
       console.error("Fetch users error:", err);
-      setError(err.response?.data?.message || "Failed to load users");
+      const errorMessage = err.response?.data?.message || err.message || "Failed to load users";
+      setUsersError(errorMessage);
       setUsers([]);
     } finally {
       setUsersLoading(false);
@@ -57,20 +69,31 @@ function AdminDashboard() {
   const fetchPosts = async () => {
     try {
       setPostsLoading(true);
-      setError(null);
+      setPostsError(null);
       const token = localStorage.getItem("token");
       
-      if (!token) throw new Error("No token found");
+      if (!token) {
+        setPostsError("No authentication token found. Please login again.");
+        setPostsLoading(false);
+        return;
+      }
 
       const response = await axios.get("http://localhost:3000/api/post", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const postsData = response.data?.data || response.data || [];
-      setPosts(Array.isArray(postsData) ? postsData : []);
+      const postsData = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data?.DATA)
+        ? response.data.DATA
+        : [];
+      setPosts(postsData);
     } catch (err) {
       console.error("Fetch posts error:", err);
-      setError(err.response?.data?.message || "Failed to load posts");
+      const errorMessage = err.response?.data?.message || err.message || "Failed to load posts";
+      setPostsError(errorMessage);
       setPosts([]);
     } finally {
       setPostsLoading(false);
@@ -80,7 +103,7 @@ function AdminDashboard() {
   const handleDeleteUser = async (id) => {
     // Prevent self-deletion
     if (id === user?.id || id === user?._id) {
-      setError("Cannot delete yourself");
+      setUsersError("Cannot delete yourself");
       return;
     }
 
@@ -91,10 +114,12 @@ function AdminDashboard() {
       await axios.delete(`http://localhost:3000/api/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setUsersError(null);
       fetchUsers(); // Refresh users list
     } catch (err) {
       console.error("Delete user error:", err);
-      setError(err.response?.data?.message || "Failed to delete user");
+      const errorMessage = err.response?.data?.message || err.message || "Failed to delete user";
+      setUsersError(errorMessage);
     }
   };
 
@@ -106,26 +131,34 @@ function AdminDashboard() {
       await axios.delete(`http://localhost:3000/api/post/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setPostsError(null);
       fetchPosts(); // Refresh posts list
     } catch (err) {
       console.error("Delete post error:", err);
-      setError(err.response?.data?.message || "Failed to delete post");
+      const errorMessage = err.response?.data?.message || err.message || "Failed to delete post";
+      setPostsError(errorMessage);
     }
   };
 
-  const isLoading = usersLoading || postsLoading;
-
-  if (isLoading) {
-    return <div className="loading">Loading admin dashboard...</div>;
-  }
+  // Helper function to get user display name
+  const getUserDisplayName = (u) => {
+    if (u.firstName && u.lastName) {
+      return `${u.firstName} ${u.lastName}`;
+    } else if (u.name) {
+      return u.name;
+    } else if (u.firstName) {
+      return u.firstName;
+    }
+    return "Unknown User";
+  };
 
   return (
     <div className="manager-dashboard">
       <header className="dashboard-header">
         <h1>Admin Dashboard</h1>
         <div className="user-info">
-          <span>Welcome, {user?.firstName} {user?.lastName}</span>
-          <span className="role-badge">{user?.role}</span>
+          <span>Welcome, {getUserDisplayName(user || {})}</span>
+          <span className="role-badge">{user?.role || "admin"}</span>
         </div>
       </header>
 
@@ -145,16 +178,15 @@ function AdminDashboard() {
       </nav>
 
       <main className="dashboard-content">
-        {error && (
-          <div className="error-banner" style={{color: 'red', padding: '10px', marginBottom: '20px'}}>
-            {error}
-            <button onClick={() => setError(null)} style={{marginLeft: '10px'}}>×</button>
-          </div>
-        )}
-
         {activeTab === "users" && (
           <div className="users-section">
             <h2>All Users ({users.length})</h2>
+            {usersError && (
+              <div className="error-banner" style={{color: 'red', padding: '10px', marginBottom: '20px'}}>
+                {usersError}
+                <button onClick={() => setUsersError(null)} style={{marginLeft: '10px'}}>×</button>
+              </div>
+            )}
             {usersLoading ? (
               <div>Loading users...</div>
             ) : users.length === 0 ? (
@@ -175,9 +207,9 @@ function AdminDashboard() {
                     {users.map((u) => (
                       <tr key={u.id || u._id}>
                         <td>{u.id || u._id}</td>
-                        <td>{u.firstName} {u.lastName}</td>
+                        <td>{getUserDisplayName(u)}</td>
                         <td>{u.email}</td>
-                        <td>{u.role}</td>
+                        <td>{u.role || "user"}</td>
                         <td>
                           <button
                             className="delete-btn"
@@ -198,6 +230,12 @@ function AdminDashboard() {
         {activeTab === "posts" && (
           <div className="posts-section">
             <h2>All Posts ({posts.length})</h2>
+            {postsError && (
+              <div className="error-banner" style={{color: 'red', padding: '10px', marginBottom: '20px'}}>
+                {postsError}
+                <button onClick={() => setPostsError(null)} style={{marginLeft: '10px'}}>×</button>
+              </div>
+            )}
             {postsLoading ? (
               <div>Loading posts...</div>
             ) : posts.length === 0 ? (
@@ -210,6 +248,8 @@ function AdminDashboard() {
                       <th>ID</th>
                       <th>Title</th>
                       <th>Content</th>
+                      <th>Tags</th>
+                      <th>Author</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -218,7 +258,9 @@ function AdminDashboard() {
                       <tr key={post.id || post._id}>
                         <td>{post.id || post._id}</td>
                         <td>{post.title}</td>
-                        <td>{post.content?.substring(0, 100)}...</td>
+                        <td>{post.content?.substring(0, 100)}{post.content?.length > 100 ? "..." : ""}</td>
+                        <td>{Array.isArray(post.tag) ? post.tag.join(", ") : post.tag || "-"}</td>
+                        <td>{post.author?.name || post.author || "-"}</td>
                         <td>
                           <button
                             className="delete-btn"
