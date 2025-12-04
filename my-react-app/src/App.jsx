@@ -22,7 +22,7 @@ function App() {
         <Route path="/Register" element={<Register/>} />
         <Route path="/Login" element={<Login/>}/>
         <Route path="/Account" element={<Account/>}/>
-        <Route path="/EditorDasshboard" element={<EditorDashboard/>}/>
+        <Route path="/EditorDashboard" element={<EditorDashboard/>}/>
         <Route path="/AdminDashboard" element={<AdminDashboard/>}/>
       </Routes>
     </BrowserRouter>

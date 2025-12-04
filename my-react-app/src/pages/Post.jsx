@@ -10,7 +10,6 @@ function Post() {
   useEffect(() => {
     axios.get("http://localhost:3000/api/post")
       .then(res => {
-        // Your backend returns { DATA: [...] }
         setPosts(res.data.DATA);
         setLoading(false);
       })
@@ -37,9 +36,7 @@ function Post() {
           
           <h2 className="featured-heading">{featuredPost.title}</h2>
           <p className="featured-text">{featuredPost.content.slice(0, 150)}...</p>
-          
-          {/* Changed tags to tag (singular) to match your backend */}
-          <div className="featured-tags">
+                    <div className="featured-tags">
             {featuredPost.tag && (
               <span className="tag">{featuredPost.tag}</span>
             )}
@@ -55,11 +52,9 @@ function Post() {
             
             <h3 className="post-title">{post.title}</h3>
             <p className="post-excerpt">{post.content.slice(0, 100)}...</p>
-            
-            {/* Changed tags to tag (singular) to match your backend */}
-            <div className="post-tags">
-              {post.tag && (
-                <span className="tag">{post.tag}</span>
+                <div className="post-tags">
+                  {post.tag && (
+                    <span className="tag">{post.tag}</span>
               )}
             </div>
             

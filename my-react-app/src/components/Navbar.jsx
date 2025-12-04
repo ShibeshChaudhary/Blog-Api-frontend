@@ -24,9 +24,8 @@ function Navbar() {
               <Link to="/AdminDashboard">Admin Dashboard</Link>
             )}
             {user?.role === 'editor' && (
-              <Link to="/EditorDashboard">Editor Dashboard</Link>
+              <Link to="EditorDashboard">Editor Dashboard</Link>
             )}
-            <Link to="/Account">My Account</Link>
             <button onClick={handleLogout} className="nav-logout-btn">
               Logout
             </button>

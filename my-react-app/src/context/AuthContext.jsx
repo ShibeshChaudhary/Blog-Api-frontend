@@ -1,8 +1,11 @@
+// src/context/AuthContext.jsx
 import { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { API_URL } from "../services/api";
 
 const AuthContext = createContext();
+
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -17,6 +20,7 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     verifyToken();
   }, []);
@@ -29,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const res = await axios.get(`${API_URL}/api/auth/profile`, {
+      const res = await axios.get(`${API_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(res.data.user);
@@ -87,16 +91,20 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem("token");
       if (token) {
-        await axios.post(
-          `${API_URL}/api/auth/logout`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` }
+        try {
+          await axios.post(
+            `${API_URL}/api/auth/logout`,
+            {},
+            {
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          );
+        } catch (err) {
+          if (err.response?.status !== 404) {
+            console.error("Logout API error:", err);
           }
-        );
+        }
       }
-    } catch (err) {
-      console.error("Logout API error:", err);
     } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -115,7 +123,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         isAdmin: user?.role === "admin",
         isEditor: user?.role === "editor",
-        isUser: user?.role === "user",
+        
       }}
     >
       {children}

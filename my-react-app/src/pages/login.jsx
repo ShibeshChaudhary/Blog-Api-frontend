@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from '../context/AuthContext';
 import "./Register.css";
 
 function Login() {
@@ -19,7 +19,19 @@ function Login() {
     const result = await login(email, password);
     
     if (result.success) {
-      navigate("/Account");
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        if (user.role === 'admin') {
+          navigate('/AdminDashboard');
+        } else if (user.role === 'editor') {
+          navigate('/EditorDashboard');
+        } else {
+          navigate('/Account');
+        }
+      } else {
+        navigate('/Account');
+      }
     } else {
       setError(result.error);
       setLoading(false);
@@ -47,7 +59,7 @@ function Login() {
           required
         />
         
-        {error && <p style={{color: 'red', fontSize: '14px'}}>{error}</p>}
+        {error && <p style={{color: 'red', fontSize: '14px', marginTop: '10px'}}>{error}</p>}
         
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}

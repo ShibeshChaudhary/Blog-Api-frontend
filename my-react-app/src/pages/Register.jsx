@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from '../context/AuthContext';
 import "./Register.css";
 
 function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
-  const [error, setError] = useState("");
+  const [role] = useState("user");
+  const [ setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -57,13 +57,6 @@ function Register() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="user">User</option>
-          <option value="editor">Editor</option>
-        </select>
-
-        {error && <p style={{color: 'red', fontSize: '14px'}}>{error}</p>}
 
         <button type="submit" disabled={loading}>
           {loading ? "Signing up..." : "Submit"}
