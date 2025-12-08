@@ -1,11 +1,11 @@
 .nav-bar {
-  background: rgb(89, 90, 92);
-  padding: 1rem 2rem;
-  position: fixed;    
+  background: cadetblue;
+  position: fixed !important;
   top: 0;
   left: 0;
-  width: 100%;       
+  width: 100%;
   z-index: 1000;
+  box-shadow: 0 2px 5px rgba(102, 157, 240, 0.15);
 }
 
 .nav-bar-div {

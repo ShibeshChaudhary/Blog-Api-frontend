@@ -3,8 +3,9 @@
 .manager-dashboard {
   min-height: 100vh;
   background: #f9fafb;
-  padding: 20px;
+
   font-family: system-ui, sans-serif;
+  margin-top: 70px;
 }
 
 /* Header */
@@ -12,11 +13,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  background:cornflowerblue;
   padding: 16px 20px;
   border-radius: 12px;
   box-shadow: 0 5px 12px rgba(0,0,0,0.04);
   margin-bottom: 20px;
+   margin-top: 250px;
 }
 
 .dashboard-header h1 {
@@ -105,7 +107,7 @@
 }
 
 .data-table th {
-  background: #f3f4f6;
+  background: #759dee;
   padding: 12px;
   text-align: left;
 }

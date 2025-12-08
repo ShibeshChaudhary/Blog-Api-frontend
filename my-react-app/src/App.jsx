@@ -10,6 +10,7 @@ import Post from "./pages/Post";
 import Account from "./pages/Account"
 import EditorDashboard from "./pages/EditorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import SinglePost from "./pages/SinglePost";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/Account" element={<Account/>}/>
             <Route path="/EditorDashboard" element={<EditorDashboard/>}/>
             <Route path="/AdminDashboard" element={<AdminDashboard/>}/>
+            <Route path="/post/:id" element={<SinglePost/>}/>
           </Routes>
         </BrowserRouter>
       </AuthProvider>

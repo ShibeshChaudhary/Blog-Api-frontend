@@ -5,7 +5,7 @@ import axios from "axios";
 import "./AdminDashboard.css"; 
 
 function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("users");
+  const [activeTab] = useState("users");
   const [usersLoading, setUsersLoading] = useState(true);
   const [postsLoading, setPostsLoading] = useState(true);
   const [users, setUsers] = useState([]);
@@ -241,171 +241,90 @@ function AdminDashboard() {
           <span className="role-badge">{user?.role || "admin"}</span>
         </div>
       </header>
-
-      <nav className="dashboard-nav" style={{marginBottom: '20px', display: 'flex', gap: '10px'}}>
-        <button
-          className={`nav-tab ${activeTab === "users" ? "active" : ""}`}
-          onClick={() => {
-            console.log("Users tab clicked");
-            setActiveTab("users");
-          }}
-          style={{
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px',
-            backgroundColor: activeTab === "users" ? '#2563eb' : 'white',
-            color: activeTab === "users" ? 'white' : '#374151',
-            transition: 'all 0.2s'
-          }}
-        >
-          Manage Users ({users.length})
-        </button>
-        <button
-          className={`nav-tab ${activeTab === "posts" ? "active" : ""}`}
-          onClick={() => {
-            console.log("Posts tab clicked, current posts count:", posts.length);
-            setActiveTab("posts");
-          }}
-          style={{
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px',
-            backgroundColor: activeTab === "posts" ? '#2563eb' : 'white',
-            color: activeTab === "posts" ? 'white' : '#374151',
-            transition: 'all 0.2s'
-          }}
-        >
-          Manage Posts ({posts.length})
-        </button>
-      </nav>
-
       <main className="dashboard-content">
-        {activeTab === "users" && (
-          <div className="users-section">
-            <h2>All Users ({users.length})</h2>
-            {usersError && (
-              <div className="error-banner" style={{color: 'red', padding: '10px', marginBottom: '20px'}}>
-                {usersError}
-                <button onClick={() => setUsersError(null)} style={{marginLeft: '10px'}}>×</button>
-              </div>
-            )}
-            {usersLoading ? (
-              <div>Loading users...</div>
-            ) : users.length === 0 ? (
-              <div>No users found</div>
-            ) : (
-              <div className="table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((u) => (
-                      <tr key={u.id || u._id}>
-                        <td>{u.id || u._id}</td>
-                        <td>{getUserDisplayName(u)}</td>
-                        <td>{u.email}</td>
-                        <td>{u.role || "user"}</td>
-                        <td>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteUser(u.id || u._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+  <div className="users-section">
+    <h2>All Users ({users.length})</h2>
 
-        {activeTab === "posts" && (
-          <div className="posts-section">
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-              <h2>All Posts ({posts.length})</h2>
-              <button 
-                onClick={fetchPosts}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#339af0',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-                disabled={postsLoading}
-              >
-                {postsLoading ? 'Refreshing...' : 'Refresh Posts'}
-              </button>
-            </div>
-            {postsError && (
-              <div className="error-banner" style={{color: 'red', padding: '10px', marginBottom: '20px'}}>
-                {postsError}
-                <button onClick={() => setPostsError(null)} style={{marginLeft: '10px'}}>×</button>
-              </div>
-            )}
-            {postsLoading ? (
-              <div>Loading posts...</div>
-            ) : postsError ? (
-              <div style={{color: 'red', padding: '10px'}}>
-                Error loading posts. Check console for details.
-              </div>
-            ) : posts.length === 0 ? (
-              <div>No posts found. Posts may not exist or there was an issue fetching them.</div>
-            ) : (
-              <div className="table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Title</th>
-                      <th>Content</th>
-                      <th>Tags</th>
-                      <th>Author</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {posts.map((post) => (
-                      <tr key={post.id || post._id}>
-                        <td>{post.id || post._id}</td>
-                        <td>{post.title}</td>
-                        <td>{post.content?.substring(0, 100)}{post.content?.length > 100 ? "..." : ""}</td>
-                        <td>{Array.isArray(post.tag) ? post.tag.join(", ") : post.tag || "-"}</td>
-                        <td>{post.author?.name || post.author || "-"}</td>
-                        <td>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeletePost(post.id || post._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+    {usersError && (
+      <div style={{ color: "red" }}>{usersError}</div>
+    )}
+
+    {usersLoading ? (
+      <p>Loading users...</p>
+    ) : users.length === 0 ? (
+      <p>No users found</p>
+    ) : (
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(u => (
+            <tr key={u._id || u.id}>
+              <td>{u._id || u.id}</td>
+              <td>{getUserDisplayName(u)}</td>
+              <td>{u.email}</td>
+              <td>{u.role}</td>
+              <td>
+                <button onClick={() => handleDeleteUser(u._id || u.id)}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+
+  <hr style={{ margin: "50px 0" }} />
+  <div className="posts-section">
+    <h2>All Posts ({posts.length})</h2>
+
+    {postsError && <div style={{ color: "red" }}>{postsError}</div>}
+
+    {postsLoading ? (
+      <p>Loading posts...</p>
+    ) : posts.length === 0 ? (
+      <p>No posts found</p>
+    ) : (
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Content</th>
+            <th>Tag</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {posts.map(p => (
+            <tr key={p._id || p.id}>
+              <td>{p._id || p.id}</td>
+              <td>{p.title}</td>
+              <td>{p.content?.slice(0, 50)}...</td>
+              <td>{p.tag || "-"}</td>
+              <td>
+                <button onClick={() => handleDeletePost(p._id || p.id)}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+
+</main>
+
     </div>
   );
 }

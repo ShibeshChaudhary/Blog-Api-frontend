@@ -77,20 +77,17 @@ function EditorDashboard() {
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  //To ADD or UPDATE post
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       const token = localStorage.getItem("token");
-
-      // Convert tag string to array (split by comma and trim whitespace)
+ 
       const tagsArray = formData.tag
         ? formData.tag.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
         : [];
-
-      // Prepare data to send to API
+ 
       const postData = {
         title: formData.title,
         content: formData.content,
@@ -99,7 +96,7 @@ function EditorDashboard() {
       };
 
       if (editingPost) {
-        // UPDATE
+   
         const postId = editingPost.id || editingPost._id;
         if (!postId) {
           setError("Post ID is missing. Cannot update post.");
@@ -113,12 +110,10 @@ function EditorDashboard() {
           }
         );
       } else {
-        // CREATE
         await axios.post("http://localhost:3000/api/post", postData, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
-
       setFormData({ title: "", content: "", tag: "", author: "" });
       setEditingPost(null);
       setError(null);
